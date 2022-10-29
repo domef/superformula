@@ -1,59 +1,100 @@
-from functools import partial
+import pyvista as pv
+
 from superformula import Superformula
-import numpy as np
-import open3d as o3d
-import open3d.visualization.gui as gui
-import open3d.visualization.rendering as rendering
 
 
-class SuperformulaGUI(object):
+class SuperformulaGUI:
+    def __init__(self):
+        self.resolution = 0.05
+        self.superformula = Superformula()
+        self.current = pv.PolyData()
+        self.update_point_cloud()
 
-    def __init__(self, step: float = 0.04):
-        self._step = step
-        self._size = 100
-        self._color = [1., 0., 0.]
+        self.plotter = pv.Plotter()
+        self.event_type = "always"
+        self.plotter.add_slider_widget(
+            callback=lambda value: self.update("resolution", value),
+            rng=[0.001, 0.1],
+            value=self.resolution,
+            title="resolution",
+            style="modern",
+            event_type=self.event_type,
+            pointa=(0.75, 0.89),
+            pointb=(0.95, 0.89),
+        )
+        self.plotter.add_slider_widget(
+            callback=lambda value: self.update("a", value),
+            rng=[-20, 20],
+            value=self.superformula.a,
+            title="a",
+            style="modern",
+            event_type=self.event_type,
+            pointa=(0.75, 0.76),
+            pointb=(0.95, 0.76),
+        )
+        self.plotter.add_slider_widget(
+            callback=lambda value: self.update("b", value),
+            rng=[-20, 20],
+            value=self.superformula.b,
+            title="b",
+            style="modern",
+            event_type=self.event_type,
+            pointa=(0.75, 0.63),
+            pointb=(0.95, 0.63),
+        )
+        self.plotter.add_slider_widget(
+            callback=lambda value: self.update("m", value),
+            rng=[-20, 20],
+            value=self.superformula.m,
+            title="m",
+            style="modern",
+            event_type=self.event_type,
+            pointa=(0.75, 0.50),
+            pointb=(0.95, 0.50),
+        )
+        self.plotter.add_slider_widget(
+            callback=lambda value: self.update("n1", value),
+            rng=[-20, 20],
+            value=self.superformula.n1,
+            title="n1",
+            style="modern",
+            event_type=self.event_type,
+            pointa=(0.75, 0.37),
+            pointb=(0.95, 0.37),
+        )
+        self.plotter.add_slider_widget(
+            callback=lambda value: self.update("n2", value),
+            rng=[-20, 20],
+            value=self.superformula.n2,
+            title="n2",
+            style="modern",
+            event_type=self.event_type,
+            pointa=(0.75, 0.24),
+            pointb=(0.95, 0.24),
+        )
+        self.plotter.add_slider_widget(
+            callback=lambda value: self.update("n3", value),
+            rng=[-20, 20],
+            value=self.superformula.n3,
+            title="n3",
+            style="modern",
+            event_type=self.event_type,
+            pointa=(0.75, 0.11),
+            pointb=(0.95, 0.11),
+        )
 
-        self._superformula = Superformula()
+        self.plotter.add_points(
+            self.current, color="2192FF", render_points_as_spheres=True
+        )
+        self.plotter.show()
 
-        self._window = gui.Application.instance.create_window("Superformula", 1000, 750)
-        self._scene = gui.SceneWidget()
-        self._scene.scene = rendering.Open3DScene(self._window.renderer)
-        self._load_point_cloud()
+    def update(self, param, value):
+        if param == "resolution":
+            self.resolution = value
+        else:
+            self.superformula.__dict__[param] = value
+        self.update_point_cloud()
 
-        em = self._window.theme.font_size
-        self._settings = gui.Vert(0, gui.Margins(0.25 * em, 0.25 * em, 0.25 * em, 0.25 * em))
-
-        self._sf_items = []
-        for k, v in self._superformula.__dict__.items():
-            label = gui.Label(k)
-            slider = gui.Slider(gui.Slider.DOUBLE)
-            slider.double_value = float(v)
-            slider.set_on_value_changed(partial(self._on_update, key=k))
-            slider.set_limits(-20, 20)
-            self._sf_items.append(label)
-            self._sf_items.append(slider)
-
-        for item in self._sf_items:
-            self._settings.add_child(item)
-
-        self._window.add_child(self._scene)
-        self._window.add_child(self._settings)
-        self._window.set_on_layout(self._on_layout)
-
-    def _on_layout(self, theme):
-        r = self._window.content_rect
-        self._scene.frame = r
-        width = 16 * theme.font_size
-        height = min(r.height, self._settings.calc_preferred_size(theme).height)
-        self._settings.frame = gui.Rect(r.get_right() - width, r.y, width, height)
-
-    def _on_update(self, value, key):
-        self._superformula.__dict__[key] = value
-        self._load_point_cloud()
-
-    def _load_point_cloud(self):
-        self._scene.scene.clear_geometry()
-        pc = self._superformula.point_cloud(self._step) * self._size
-        pc = o3d.geometry.PointCloud(o3d.utility.Vector3dVector(pc))
-        pc = pc.paint_uniform_color(np.array(self._color))
-        self._scene.scene.add_geometry('superformula', pc, rendering.Material())
+    def update_point_cloud(self):
+        pc = self.superformula.point_cloud(self.resolution)
+        self.current.overwrite(pv.PolyData(pc))

@@ -1,26 +1,32 @@
-from typing import Tuple
 from dataclasses import dataclass
+from typing import Tuple
+
 import numpy as np
+
+EPSILON = 1e-8
 
 
 @dataclass
-class Superformula(object):
+class Superformula:
 
-    a: float = 1.
-    b: float = 1.
-    m1: float = 8.
-    m2: float = 8.
+    a: float = 1.0
+    b: float = 1.0
+    m: float = 8.0
     n1: float = 0.5
     n2: float = 0.5
-    n3: float = 8.
+    n3: float = 8.0
 
     def rho(self, alpha: np.ndarray) -> np.ndarray:
-        term1 = np.abs(np.cos(self.m1 * alpha / 4) / self.a)
-        term2 = np.abs(np.sin(self.m2 * alpha / 4) / self.b)
-        result = np.power(np.power(term1, self.n2) + np.power(term2, self.n3), -1/self.n1)
+        term1 = np.abs(np.cos(self.m * alpha / 4) / (self.a + EPSILON))
+        term2 = np.abs(np.sin(self.m * alpha / 4) / (self.b + EPSILON))
+        base = np.power(term1, self.n2) + np.power(term2, self.n3)
+        exponent = -1 / (self.n1 + EPSILON)
+        result = np.power(base, exponent)
         return result
 
-    def xyz(self, theta: np.ndarray, phi: np.ndarray) -> Tuple[np.ndarray]:
+    def xyz(
+        self, theta: np.ndarray, phi: np.ndarray
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         rho_theta = self.rho(theta)
         rho_phi = self.rho(phi)
         x = rho_theta * np.cos(theta) * rho_phi * np.cos(phi)

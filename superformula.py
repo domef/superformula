@@ -1,6 +1,5 @@
 import math
 from dataclasses import dataclass
-from typing import Tuple
 
 import numpy as np
 
@@ -54,3 +53,18 @@ class Superformula:
         tr2 = np.stack([v1, v2, v3], axis=2).reshape(-1, 3)
         triangles = np.concatenate([tr1, tr2], axis=0)
         return triangles
+
+
+class SuperformulaV2(Superformula):
+    def point_cloud(self, n_points: int) -> np.ndarray:
+        points = np.random.randn(3, n_points).T
+        norm = np.linalg.norm(points, axis=1)
+        points /= np.expand_dims(norm, 1)
+        theta = np.arccos(points[:, 2])
+        phi = np.arctan2(points[:, 1], points[:, 0])
+        x, y, z = self.xyz(theta, phi)
+        pc = np.stack((np.ravel(x), np.ravel(y), np.ravel(z)), axis=1)
+        return pc
+
+    def triangulate(self, pc: np.ndarray) -> np.ndarray:
+        raise NotImplementedError()

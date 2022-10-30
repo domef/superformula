@@ -89,6 +89,15 @@ class SuperformulaGUI:
             callback=lambda x: self.switch_visualization(x),
             value=False,
             position=(10.0, 10.0),
+            color_on="green",
+            color_off="green",
+        )
+        self.plotter.add_checkbox_button_widget(
+            callback=lambda x: self.save_data(x),
+            value=False,
+            position=(70.0, 10.0),
+            color_on="blue",
+            color_off="blue",
         )
 
         self.update_visualization()
@@ -127,3 +136,6 @@ class SuperformulaGUI:
         self.visualization_type = "mesh" if value else "point_cloud"
         self.update_data()
         self.update_visualization()
+
+    def save_data(self, value):
+        self.current_data.save("./superformula.ply")

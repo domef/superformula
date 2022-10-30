@@ -62,8 +62,8 @@ class SuperformulaV2(Superformula):
         points /= np.expand_dims(norm, 1)
         theta = np.arccos(points[:, 2])
         phi = np.arctan2(points[:, 1], points[:, 0])
-        x, y, z = self.xyz(theta, phi)
-        pc = np.stack((np.ravel(x), np.ravel(y), np.ravel(z)), axis=1)
+        xyz = self.xyz(theta, phi)
+        pc = xyz.reshape(-1, 3)
         return pc
 
     def triangulate(self, pc: np.ndarray) -> np.ndarray:

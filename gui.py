@@ -6,7 +6,6 @@ from superformula import Superformula
 
 class SuperformulaGUI:
     def __init__(self):
-        self.resolution = 500
         self.superformula = Superformula()
         self.current_data = pv.PolyData()
         self.current_actor = None
@@ -18,7 +17,7 @@ class SuperformulaGUI:
         self.plotter.add_slider_widget(
             callback=lambda x: self.update("resolution", x),
             rng=[100, 5000],
-            value=self.resolution,
+            value=self.superformula.resolution,
             title="resolution",
             style="modern",
             event_type=self.event_type,
@@ -105,13 +104,12 @@ class SuperformulaGUI:
 
     def update(self, param, value):
         if param == "resolution":
-            self.resolution = int(value)
-        else:
-            self.superformula.__dict__[param] = value
+            value = int(value)
+        self.superformula.__dict__[param] = value
         self.update_data()
 
     def update_data(self):
-        pc = self.superformula.point_cloud(self.resolution)
+        pc = self.superformula.point_cloud()
         if self.visualization_type == "point_cloud":
             new_data = pv.PolyData(pc)
         elif self.visualization_type == "mesh":

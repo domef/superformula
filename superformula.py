@@ -8,13 +8,13 @@ EPSILON = 1e-8
 
 @dataclass
 class Superformula:
-
     a: float = 1.0
     b: float = 1.0
     m: float = 8.0
     n1: float = 0.5
     n2: float = 0.5
     n3: float = 8.0
+    resolution: int = 500
 
     def rho(self, alpha: np.ndarray) -> np.ndarray:
         term1 = np.abs(np.cos(self.m * alpha / 4) / (self.a + EPSILON))
@@ -33,17 +33,18 @@ class Superformula:
         xyz = np.stack([x, y, z], axis=2)
         return xyz
 
-    def point_cloud(self, resolution: int) -> np.ndarray:
-        theta = np.linspace(-np.pi, np.pi, resolution, endpoint=False)
-        phi = np.linspace(-np.pi / 2, np.pi / 2, resolution // 2, endpoint=False)
+    def point_cloud(self) -> np.ndarray:
+        theta = np.linspace(-np.pi, np.pi, self.resolution, endpoint=False)
+        phi = np.linspace(
+            -np.pi / 2, np.pi / 2, self.resolution // 2 + 1, endpoint=True
+        )
         theta, phi = np.meshgrid(theta, phi)
         xyz = self.xyz(theta, phi)
         pc = xyz.reshape(-1, 3)
         return pc
 
     def triangulate(self, pc: np.ndarray) -> np.ndarray:
-        dim = math.floor(math.sqrt(len(pc) * 2) / 2)
-        indeces = np.arange(len(pc)).reshape((dim, -1))
+        indeces = np.arange(len(pc)).reshape((self.resolution // 2 + 1, -1))
         indeces = np.concatenate([indeces, indeces[:, [0]]], axis=1)
         v1 = indeces[:-1, :-1]
         v2 = indeces[:-1, 1:]
@@ -56,8 +57,8 @@ class Superformula:
 
 
 class SuperformulaV2(Superformula):
-    def point_cloud(self, n_points: int) -> np.ndarray:
-        points = np.random.randn(3, n_points).T
+    def point_cloud(self) -> np.ndarray:
+        points = np.random.randn(3, self.resolution).T
         norm = np.linalg.norm(points, axis=1)
         points /= np.expand_dims(norm, 1)
         theta = np.arccos(points[:, 2])
